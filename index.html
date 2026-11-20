@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="DanlTech BrowserHasher – Stabiler Browser-Fingerprint (Hash) rein clientseitig. Open Source, keine externen Scripts." />
+  <meta name="description" content="DanlTech BrowserHasher – Stabiler Browser-Fingerprint mit Komponenten-Hashes und HashDB-Vergleich." />
   <title>DanlTech BrowserHasher</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔐</text></svg>" />
   <style>
@@ -23,9 +23,7 @@
       --font: "Segoe UI", system-ui, -apple-system, sans-serif;
       --mono: "Cascadia Code", "Fira Code", "SF Mono", Consolas, monospace;
     }
-
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
       font-family: var(--font);
       background: var(--bg);
@@ -36,18 +34,8 @@
         radial-gradient(ellipse 80% 50% at 50% -20%, rgba(59, 130, 246, 0.15), transparent),
         radial-gradient(ellipse 60% 40% at 100% 100%, rgba(34, 197, 94, 0.06), transparent);
     }
-
-    .container {
-      max-width: 920px;
-      margin: 0 auto;
-      padding: 2rem 1.25rem 4rem;
-    }
-
-    header {
-      text-align: center;
-      margin-bottom: 2.5rem;
-    }
-
+    .container { max-width: 960px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+    header { text-align: center; margin-bottom: 2.5rem; }
     header h1 {
       font-size: clamp(1.75rem, 5vw, 2.4rem);
       font-weight: 700;
@@ -58,250 +46,163 @@
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
-
-    header .subtitle {
-      color: var(--muted);
-      font-size: 1.05rem;
-    }
-
+    header .subtitle { color: var(--muted); font-size: 1.05rem; }
     header .domain {
-      display: inline-block;
-      margin-top: 0.75rem;
-      font-family: var(--mono);
-      font-size: 0.85rem;
-      color: var(--accent);
-      background: rgba(59, 130, 246, 0.12);
-      padding: 0.25rem 0.75rem;
-      border-radius: 999px;
-      border: 1px solid rgba(59, 130, 246, 0.25);
+      display: inline-block; margin-top: 0.75rem; font-family: var(--mono);
+      font-size: 0.85rem; color: var(--accent);
+      background: rgba(59, 130, 246, 0.12); padding: 0.25rem 0.75rem;
+      border-radius: 999px; border: 1px solid rgba(59, 130, 246, 0.25);
     }
-
     .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 1.5rem;
-      margin-bottom: 1.25rem;
-      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.25rem;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.25);
     }
-
     .card h2 {
-      font-size: 1.1rem;
-      font-weight: 600;
-      margin-bottom: 1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
+      font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem;
+      display: flex; align-items: center; gap: 0.5rem;
     }
-
     .card h2 .icon { font-size: 1.25rem; }
-
     .hash-box {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1rem 1.1rem;
-      font-family: var(--mono);
-      font-size: 0.95rem;
-      word-break: break-all;
-      line-height: 1.5;
-      position: relative;
-      min-height: 3.2rem;
-      display: flex;
-      align-items: center;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 1rem 1.1rem; font-family: var(--mono);
+      font-size: 0.95rem; word-break: break-all; line-height: 1.5;
+      min-height: 3.2rem; display: flex; align-items: center;
     }
-
-    .hash-box .placeholder {
-      color: var(--muted);
-      font-style: italic;
+    .hash-box .placeholder { color: var(--muted); font-style: italic; }
+    .hash-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1rem; }
+    button {
+      font-family: var(--font); font-size: 0.9rem; font-weight: 500;
+      border: none; border-radius: 8px; padding: 0.55rem 1.1rem;
+      cursor: pointer; transition: background 0.15s, transform 0.1s;
+      display: inline-flex; align-items: center; gap: 0.4rem;
     }
-
-    .hash-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.6rem;
-      margin-top: 1rem;
-    }
-
-    button, .btn {
-      font-family: var(--font);
-      font-size: 0.9rem;
-      font-weight: 500;
-      border: none;
-      border-radius: 8px;
-      padding: 0.55rem 1.1rem;
-      cursor: pointer;
-      transition: background 0.15s, transform 0.1s;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-    }
-
     button:active { transform: scale(0.97); }
-
-    .btn-primary {
-      background: var(--accent);
-      color: white;
-    }
-    .btn-primary:hover { background: var(--accent-hover); }
-
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
     .btn-secondary {
-      background: var(--surface2);
-      color: var(--text);
+      background: var(--surface2); color: var(--text);
       border: 1px solid var(--border);
     }
-    .btn-secondary:hover { background: #243044; }
-
+    .btn-secondary:hover:not(:disabled) { background: #243044; }
     .btn-success {
-      background: rgba(34, 197, 94, 0.15);
-      color: var(--success);
-      border: 1px solid rgba(34, 197, 94, 0.3);
+      background: rgba(34,197,94,0.15); color: var(--success);
+      border: 1px solid rgba(34,197,94,0.3);
     }
-
-    .grid-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.75rem;
-    }
-
-    @media (max-width: 640px) {
-      .grid-2 { grid-template-columns: 1fr; }
-    }
-
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    @media (max-width: 640px) { .grid-2 { grid-template-columns: 1fr; } }
     .info-item {
-      background: var(--surface2);
-      border-radius: 8px;
-      padding: 0.7rem 0.9rem;
-      border: 1px solid var(--border);
+      background: var(--surface2); border-radius: 8px;
+      padding: 0.7rem 0.9rem; border: 1px solid var(--border);
     }
-
     .info-item .label {
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      color: var(--muted);
-      margin-bottom: 0.2rem;
+      font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em;
+      color: var(--muted); margin-bottom: 0.2rem;
     }
-
-    .info-item .value {
-      font-family: var(--mono);
-      font-size: 0.88rem;
-      word-break: break-all;
+    .info-item .value { font-family: var(--mono); font-size: 0.88rem; word-break: break-all; }
+    .signals-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    .signals-table th, .signals-table td {
+      text-align: left; padding: 0.55rem 0.7rem; border-bottom: 1px solid var(--border);
     }
-
-    .signals-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.88rem;
-    }
-
-    .signals-table th,
-    .signals-table td {
-      text-align: left;
-      padding: 0.55rem 0.7rem;
-      border-bottom: 1px solid var(--border);
-    }
-
     .signals-table th {
-      color: var(--muted);
-      font-weight: 500;
-      font-size: 0.78rem;
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
+      color: var(--muted); font-weight: 500; font-size: 0.78rem;
+      text-transform: uppercase; letter-spacing: 0.03em;
     }
-
-    .signals-table td:first-child {
-      color: var(--muted);
-      white-space: nowrap;
-      width: 38%;
-    }
-
-    .signals-table td:last-child {
-      font-family: var(--mono);
-      word-break: break-all;
-    }
-
+    .signals-table td:first-child { color: var(--muted); white-space: nowrap; width: 38%; }
+    .signals-table td:last-child { font-family: var(--mono); word-break: break-all; }
     .signals-table tr:last-child td { border-bottom: none; }
-
     .notice {
-      background: rgba(245, 158, 11, 0.1);
-      border: 1px solid rgba(245, 158, 11, 0.35);
-      border-radius: 8px;
-      padding: 1rem 1.15rem;
-      font-size: 0.9rem;
-      color: #fbbf24;
-      margin-bottom: 1.5rem;
+      background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.35);
+      border-radius: 8px; padding: 1rem 1.15rem; font-size: 0.9rem;
+      color: #fbbf24; margin-bottom: 1.5rem;
     }
-
     .notice strong { color: #fcd34d; }
-
     .status {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      font-size: 0.85rem;
-      color: var(--muted);
-      margin-top: 0.75rem;
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      font-size: 0.85rem; color: var(--muted); margin-top: 0.75rem;
     }
-
-    .status .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--muted);
-    }
-
+    .status .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
     .status.ready .dot { background: var(--success); box-shadow: 0 0 8px var(--success); }
     .status.loading .dot { background: var(--warning); animation: pulse 1s infinite; }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
-    }
-
-    footer {
-      text-align: center;
-      margin-top: 2.5rem;
-      color: var(--muted);
-      font-size: 0.85rem;
-    }
-
-    footer a {
-      color: var(--accent);
-      text-decoration: none;
-    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    footer { text-align: center; margin-top: 2.5rem; color: var(--muted); font-size: 0.85rem; }
+    footer a { color: var(--accent); text-decoration: none; }
     footer a:hover { text-decoration: underline; }
-
     .embed-box {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1rem;
-      font-family: var(--mono);
-      font-size: 0.82rem;
-      overflow-x: auto;
-      white-space: pre-wrap;
-      color: #a5b4c8;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 1rem; font-family: var(--mono);
+      font-size: 0.82rem; overflow-x: auto; white-space: pre-wrap; color: #a5b4c8;
     }
-
     .tag {
-      display: inline-block;
-      font-size: 0.7rem;
-      font-weight: 600;
-      padding: 0.15rem 0.45rem;
-      border-radius: 4px;
-      margin-left: 0.4rem;
-      vertical-align: middle;
+      display: inline-block; font-size: 0.7rem; font-weight: 600;
+      padding: 0.15rem 0.45rem; border-radius: 4px; margin-left: 0.4rem; vertical-align: middle;
     }
-    .tag-stable { background: rgba(34, 197, 94, 0.15); color: var(--success); }
-    .tag-active { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+    .tag-stable { background: rgba(34,197,94,0.15); color: var(--success); }
+    .comp-row {
+      display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.6rem;
+      align-items: center; font-size: 0.85rem;
+    }
+    .comp-label {
+      min-width: 90px; color: var(--muted); font-weight: 500;
+    }
+    .comp-hash {
+      font-family: var(--mono); font-size: 0.8rem; background: var(--surface2);
+      padding: 0.3rem 0.55rem; border-radius: 6px; border: 1px solid var(--border);
+      word-break: break-all; flex: 1; min-width: 180px;
+    }
+    .match-bar-wrap {
+      background: var(--surface2); border-radius: 6px; height: 10px;
+      overflow: hidden; border: 1px solid var(--border); min-width: 80px; flex: 1;
+    }
+    .match-bar {
+      height: 100%; border-radius: 6px; transition: width 0.4s ease;
+    }
+    .match-high { background: var(--success); }
+    .match-mid { background: var(--warning); }
+    .match-low { background: var(--danger); }
+    .db-entry {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 0.9rem 1rem; margin-bottom: 0.65rem;
+    }
+    .db-entry-header {
+      display: flex; flex-wrap: wrap; justify-content: space-between;
+      align-items: center; gap: 0.5rem; margin-bottom: 0.45rem;
+    }
+    .db-entry-id { font-family: var(--mono); font-weight: 600; color: var(--accent); }
+    .db-percent {
+      font-weight: 700; font-size: 1.05rem;
+    }
+    .db-meta { font-size: 0.82rem; color: var(--muted); }
+    .db-details {
+      display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.45rem;
+    }
+    .db-chip {
+      font-size: 0.72rem; padding: 0.15rem 0.45rem; border-radius: 4px;
+      font-family: var(--mono);
+    }
+    .db-chip.ok { background: rgba(34,197,94,0.15); color: var(--success); }
+    .db-chip.no { background: rgba(239,68,68,0.12); color: #f87171; }
+    .pr-box {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 1rem; font-family: var(--mono);
+      font-size: 0.8rem; max-height: 280px; overflow: auto; white-space: pre-wrap;
+      color: #a5b4c8; margin-top: 0.75rem;
+    }
+    input[type="text"] {
+      width: 100%; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 0.55rem 0.85rem; color: var(--text);
+      font-family: var(--font); font-size: 0.9rem; margin-top: 0.4rem;
+    }
+    input[type="text"]:focus { outline: none; border-color: var(--accent); }
+    .hint { font-size: 0.85rem; color: var(--muted); margin-top: 0.5rem; }
   </style>
 </head>
 <body>
   <div class="container">
     <header>
       <h1>DanlTech BrowserHasher</h1>
-      <p class="subtitle">Stabiler Browser-Fingerprint – rein clientseitig, keine externen Scripts</p>
+      <p class="subtitle">Stabiler Browser-Fingerprint · Komponenten-Hashes · HashDB-Vergleich</p>
       <div class="domain">brwsrhash.danltech.xyz</div>
     </header>
 
@@ -311,11 +212,10 @@
       Verwende den Hash <em>nicht</em> für Tracking, Profiling oder Werbung ohne Consent.
     </div>
 
+    <!-- MAIN HASH -->
     <div class="card">
       <h2><span class="icon">🔑</span> Dein Browser-Hash <span class="tag tag-stable">stabil</span></h2>
-      <div class="hash-box" id="hashOutput">
-        <span class="placeholder">Berechne…</span>
-      </div>
+      <div class="hash-box" id="hashOutput"><span class="placeholder">Berechne…</span></div>
       <div class="hash-actions">
         <button class="btn-primary" id="btnCopyHash" disabled>📋 Hash kopieren</button>
         <button class="btn-secondary" id="btnRecalc">🔄 Neu berechnen</button>
@@ -327,254 +227,122 @@
       </div>
     </div>
 
+    <!-- COMPONENT HASHES -->
     <div class="card">
-      <h2><span class="icon">🖥️</span> Browser-Übersicht</h2>
-      <div class="grid-2" id="overviewGrid">
-        <!-- filled by JS -->
+      <h2><span class="icon">🧩</span> Komponenten-Hashes</h2>
+      <p class="hint" style="margin-bottom:0.9rem">
+        Der Gesamt-Hash setzt sich aus diesen fünf stabilen Komponenten zusammen.
+        Jede Komponente wird separat gehasht – so kannst du sehen, wo Übereinstimmungen liegen.
+      </p>
+      <div id="componentsBox">
+        <div class="comp-row"><span class="comp-label">Canvas</span><span class="comp-hash" id="compCanvas">–</span></div>
+        <div class="comp-row"><span class="comp-label">WebGL</span><span class="comp-hash" id="compWebgl">–</span></div>
+        <div class="comp-row"><span class="comp-label">Audio</span><span class="comp-hash" id="compAudio">–</span></div>
+        <div class="comp-row"><span class="comp-label">Screen</span><span class="comp-hash" id="compScreen">–</span></div>
+        <div class="comp-row"><span class="comp-label">Navigator</span><span class="comp-hash" id="compNavigator">–</span></div>
       </div>
     </div>
 
+    <!-- OVERVIEW -->
+    <div class="card">
+      <h2><span class="icon">🖥️</span> Browser-Übersicht</h2>
+      <div class="grid-2" id="overviewGrid"></div>
+    </div>
+
+    <!-- SIGNALS -->
     <div class="card">
       <h2><span class="icon">📡</span> Alle ausgelesenen Signale</h2>
-      <div style="overflow-x: auto;">
+      <div style="overflow-x:auto">
         <table class="signals-table">
-          <thead>
-            <tr>
-              <th>Signal</th>
-              <th>Wert</th>
-            </tr>
-          </thead>
-          <tbody id="signalsBody">
-          </tbody>
+          <thead><tr><th>Signal</th><th>Wert</th></tr></thead>
+          <tbody id="signalsBody"></tbody>
         </table>
       </div>
     </div>
 
+    <!-- HASHDB COMPARE -->
     <div class="card">
-      <h2><span class="icon">🧩</span> Embeddable Script</h2>
-      <p style="color: var(--muted); font-size: 0.9rem; margin-bottom: 0.9rem;">
-        Lade <code>browserhasher.js</code> auf deiner Seite ein. Es schreibt eine starke Warnung in die Konsole und stellt
+      <h2><span class="icon">📊</span> HashDB-Vergleich</h2>
+      <p class="hint" style="margin-bottom:0.9rem">
+        Vergleich mit der öffentlichen HashDB unter <code>github.com/danltech/hashdb1</code> (GitHub Pages).
+        Ähnlichkeit = Anteil übereinstimmender Komponenten-Hashes (Canvas, WebGL, Audio, Screen, Navigator).
+      </p>
+      <div class="hash-actions" style="margin-top:0">
+        <button class="btn-primary" id="btnCompareDb">🔍 Mit HashDB vergleichen</button>
+      </div>
+      <div id="dbResults" style="margin-top:1rem"></div>
+    </div>
+
+    <!-- PR GENERATOR -->
+    <div class="card">
+      <h2><span class="icon">📝</span> Für HashDB einreichen (Pull Request)</h2>
+      <p class="hint">
+        Neue Einträge kommen nur per Pull Request (oder Issue) ins Repo.
+        Hier kannst du den fertigen JSON-Inhalt + Dateiname generieren.
+      </p>
+      <label style="font-size:0.85rem;color:var(--muted)">Optionaler Kommentar</label>
+      <input type="text" id="prComment" placeholder="z.B. Chrome 131 / RTX 4070 / Windows 11" />
+      <div class="hash-actions">
+        <button class="btn-primary" id="btnGenPr" disabled>📦 PR-Inhalt generieren</button>
+        <button class="btn-secondary" id="btnCopyPr" disabled>📋 JSON kopieren</button>
+      </div>
+      <div id="prOutput" class="pr-box" style="display:none"></div>
+      <p class="hint" id="prHint" style="display:none">
+        <strong>So einreichen (Repo <a href="https://github.com/danltech/hashdb1" target="_blank" rel="noopener">danltech/hashdb1</a>):</strong><br>
+        1. Fork von <code>github.com/danltech/hashdb1</code><br>
+        2. Neue Datei: <code id="prFilename">entries/xxxxxxxx.json</code><br>
+        3. JSON einfügen → Pull Request öffnen<br>
+        4. Ein Workflow merged gültige PRs (max. 1 pro Lauf) und baut <code>index.json</code> neu.<br>
+        Manueller Trigger: Actions → „Process HashDB PRs“ → Run workflow<br>
+        Alternativ: Issue mit dem JSON und Titel „HashDB-Eintrag: &lt;id&gt;“.
+      </p>
+    </div>
+
+    <!-- EMBED -->
+    <div class="card">
+      <h2><span class="icon">🔗</span> Embeddable Script</h2>
+      <p class="hint" style="margin-bottom:0.9rem">
+        Lade <code>browserhasher.js</code> ein. Es schreibt eine Warnung in die Konsole und stellt
         <code>window.DanlTechBrowserHasher</code> bereit.
       </p>
       <div class="embed-box">&lt;script src="https://brwsrhash.danltech.xyz/browserhasher.js"&gt;&lt;/script&gt;
 &lt;script&gt;
   DanlTechBrowserHasher.getHash().then(result =&gt; {
-    console.log("Hash:", result.hash);
-    // result.signals enthält alle Rohdaten
+    console.log("Gesamt-Hash:", result.hash);
+    console.log("Komponenten:", result.components);
   });
 &lt;/script&gt;</div>
     </div>
 
-    <div class="card">
-      <h2><span class="icon">📚</span> HashDB-Idee (separates Repo)</h2>
-      <p style="color: var(--muted); font-size: 0.9rem;">
-        Für eine öffentliche Sammlung von Hashes kannst du ein separates Repository anlegen (z.&nbsp;B.
-        <code>danltech/browserhasher-hashdb</code>). Nutzer können dort per Pull-Request ihren Hash + optionalen Kommentar einreichen.
-        Die Seite hier speichert nichts serverseitig – alles läuft lokal im Browser.
-      </p>
-    </div>
-
     <footer>
-      <p>
-        Open Source · Keine Cookies · Keine externen Libraries ·
-        <a href="https://github.com/" target="_blank" rel="noopener">GitHub</a>
-      </p>
-      <p style="margin-top: 0.4rem;">© DanlTech · BrowserHasher</p>
+      <p>Open Source · Keine Cookies · Keine externen Libraries</p>
+      <p style="margin-top:0.4rem">© DanlTech · BrowserHasher v1.1</p>
     </footer>
   </div>
 
+  <script src="browserhasher.js"></script>
+  <div id="fallbackScript">
   <script>
     /**
-     * DanlTech BrowserHasher – Inline Version (identisch zur Logik in browserhasher.js)
-     * Alle Signale werden deterministisch gesammelt und per SHA-256 gehasht.
+     * Page logic – uses DanlTechBrowserHasher from browserhasher.js
+     * Falls that fails to load (file://), we still have inline collect via the library.
      */
     (function () {
       "use strict";
 
-      async function sha256(str) {
-        const buf = new TextEncoder().encode(str);
-        const hashBuf = await crypto.subtle.digest("SHA-256", buf);
-        return Array.from(new Uint8Array(hashBuf))
-          .map((b) => b.toString(16).padStart(2, "0"))
-          .join("");
-      }
+      var lastResult = null;
+      var lastPrJson = "";
 
-      function getCanvasFingerprint() {
-        try {
-          const canvas = document.createElement("canvas");
-          canvas.width = 280;
-          canvas.height = 60;
-          const ctx = canvas.getContext("2d");
-          if (!ctx) return "unsupported";
-
-          ctx.textBaseline = "top";
-          ctx.font = "14px 'Arial'";
-          ctx.fillStyle = "#f60";
-          ctx.fillRect(125, 1, 62, 20);
-          ctx.fillStyle = "#069";
-          ctx.fillText("DanlTech BrowserHasher 🔐", 2, 15);
-          ctx.fillStyle = "rgba(102, 204, 0, 0.7)";
-          ctx.fillText("DanlTech BrowserHasher 🔐", 4, 17);
-          ctx.beginPath();
-          ctx.arc(50, 40, 12, 0, Math.PI * 2);
-          ctx.fillStyle = "#c0c";
-          ctx.fill();
-
-          return canvas.toDataURL();
-        } catch (e) {
-          return "error:" + (e.message || "unknown");
-        }
-      }
-
-      function getWebGLInfo() {
-        try {
-          const canvas = document.createElement("canvas");
-          const gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
-          if (!gl) return { vendor: "unsupported", renderer: "unsupported" };
-
-          const debugInfo = gl.getExtension("WEBGL_debug_renderer_info");
-          const vendor = debugInfo
-            ? gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL)
-            : gl.getParameter(gl.VENDOR);
-          const renderer = debugInfo
-            ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)
-            : gl.getParameter(gl.RENDERER);
-
-          return {
-            vendor: vendor || "unknown",
-            renderer: renderer || "unknown",
-          };
-        } catch (e) {
-          return { vendor: "error", renderer: "error" };
-        }
-      }
-
-      async function getAudioFingerprint() {
-        try {
-          const AudioCtx = window.OfflineAudioContext || window.webkitOfflineAudioContext;
-          if (!AudioCtx) return "unsupported";
-
-          const ctx = new AudioCtx(1, 44100, 44100);
-          const oscillator = ctx.createOscillator();
-          oscillator.type = "triangle";
-          oscillator.frequency.setValueAtTime(10000, ctx.currentTime);
-
-          const compressor = ctx.createDynamicsCompressor();
-          compressor.threshold.setValueAtTime(-50, ctx.currentTime);
-          compressor.knee.setValueAtTime(40, ctx.currentTime);
-          compressor.ratio.setValueAtTime(12, ctx.currentTime);
-          compressor.attack.setValueAtTime(0, ctx.currentTime);
-          compressor.release.setValueAtTime(0.25, ctx.currentTime);
-
-          oscillator.connect(compressor);
-          compressor.connect(ctx.destination);
-          oscillator.start(0);
-
-          const buffer = await ctx.startRendering();
-          const data = buffer.getChannelData(0);
-          let sum = 0;
-          for (let i = 4500; i < 5000; i++) {
-            sum += Math.abs(data[i]);
-          }
-          return sum.toString();
-        } catch (e) {
-          return "error:" + (e.message || "unknown");
-        }
-      }
-
-      function collectPassiveSignals() {
-        const nav = navigator;
-        const scr = screen;
-        const tz = Intl.DateTimeFormat().resolvedOptions();
-
-        return {
-          userAgent: nav.userAgent || "",
-          language: nav.language || "",
-          languages: Array.isArray(nav.languages) ? nav.languages.join(",") : "",
-          platform: nav.platform || "",
-          hardwareConcurrency: nav.hardwareConcurrency ?? "",
-          deviceMemory: nav.deviceMemory ?? "",
-          maxTouchPoints: nav.maxTouchPoints ?? "",
-          cookieEnabled: nav.cookieEnabled,
-          doNotTrack: nav.doNotTrack ?? "",
-          vendor: nav.vendor || "",
-          product: nav.product || "",
-          productSub: nav.productSub || "",
-          appVersion: nav.appVersion || "",
-          screenWidth: scr.width,
-          screenHeight: scr.height,
-          availWidth: scr.availWidth,
-          availHeight: scr.availHeight,
-          colorDepth: scr.colorDepth,
-          pixelDepth: scr.pixelDepth,
-          devicePixelRatio: window.devicePixelRatio || 1,
-          timezone: tz.timeZone || "",
-          timezoneOffset: new Date().getTimezoneOffset(),
-          locale: tz.locale || "",
-        };
-      }
-
-      function parseUA(ua) {
-        let browser = "Unknown";
-        let version = "";
-        let os = "Unknown";
-
-        if (/Edg\/(\d+[\.\d]*)/.test(ua)) {
-          browser = "Microsoft Edge";
-          version = RegExp.$1;
-        } else if (/OPR\/(\d+[\.\d]*)/.test(ua) || /Opera/.test(ua)) {
-          browser = "Opera";
-          version = RegExp.$1 || "";
-        } else if (/Chrome\/(\d+[\.\d]*)/.test(ua) && !/Edg|OPR/.test(ua)) {
-          browser = "Chrome";
-          version = RegExp.$1;
-        } else if (/Firefox\/(\d+[\.\d]*)/.test(ua)) {
-          browser = "Firefox";
-          version = RegExp.$1;
-        } else if (/Safari\//.test(ua) && /Version\/(\d+[\.\d]*)/.test(ua)) {
-          browser = "Safari";
-          version = RegExp.$1;
-        }
-
-        if (/Windows NT 10/.test(ua)) os = "Windows 10/11";
-        else if (/Windows NT 6\.3/.test(ua)) os = "Windows 8.1";
-        else if (/Windows NT 6\.1/.test(ua)) os = "Windows 7";
-        else if (/Mac OS X/.test(ua)) os = "macOS";
-        else if (/Android/.test(ua)) os = "Android";
-        else if (/iPhone|iPad|iPod/.test(ua)) os = "iOS";
-        else if (/Linux/.test(ua)) os = "Linux";
-
-        return { browser, version, os };
-      }
-
-      async function collectAll() {
-        const passive = collectPassiveSignals();
-        const canvas = getCanvasFingerprint();
-        const webgl = getWebGLInfo();
-        const audio = await getAudioFingerprint();
-        const uaParsed = parseUA(passive.userAgent);
-
-        const signals = {
-          ...passive,
-          canvasFingerprint: canvas,
-          webglVendor: webgl.vendor,
-          webglRenderer: webgl.renderer,
-          audioFingerprint: audio,
-          parsedBrowser: uaParsed.browser,
-          parsedVersion: uaParsed.version,
-          parsedOS: uaParsed.os,
-        };
-
-        // Deterministic string: sort keys, stable separators
-        const keys = Object.keys(signals).sort();
-        const payload = keys.map((k) => k + "=" + String(signals[k])).join("|");
-        const hash = await sha256(payload);
-
-        return { hash, signals, payload };
+      function escapeHtml(str) {
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
       }
 
       function renderOverview(signals) {
-        const items = [
+        var items = [
           { label: "Browser", value: signals.parsedBrowser + (signals.parsedVersion ? " " + signals.parsedVersion : "") },
           { label: "Betriebssystem", value: signals.parsedOS },
           { label: "Plattform", value: signals.platform },
@@ -584,18 +352,13 @@
           { label: "CPU-Kerne", value: signals.hardwareConcurrency || "n/a" },
           { label: "RAM (GB)", value: signals.deviceMemory || "n/a" },
         ];
-
-        const grid = document.getElementById("overviewGrid");
-        grid.innerHTML = items
-          .map(
-            (i) =>
-              `<div class="info-item"><div class="label">${i.label}</div><div class="value">${escapeHtml(String(i.value))}</div></div>`
-          )
-          .join("");
+        document.getElementById("overviewGrid").innerHTML = items.map(function (i) {
+          return '<div class="info-item"><div class="label">' + i.label + '</div><div class="value">' + escapeHtml(String(i.value)) + '</div></div>';
+        }).join("");
       }
 
       function renderSignals(signals) {
-        const order = [
+        var order = [
           "parsedBrowser", "parsedVersion", "parsedOS",
           "userAgent", "platform", "vendor", "product", "productSub", "appVersion",
           "language", "languages", "locale",
@@ -607,130 +370,229 @@
           "webglVendor", "webglRenderer",
           "canvasFingerprint", "audioFingerprint",
         ];
-
-        const labels = {
-          parsedBrowser: "Browser (geparst)",
-          parsedVersion: "Version (geparst)",
-          parsedOS: "OS (geparst)",
-          userAgent: "User-Agent",
-          platform: "Platform",
-          vendor: "Vendor",
-          product: "Product",
-          productSub: "Product Sub",
-          appVersion: "App Version",
-          language: "Language",
-          languages: "Languages",
-          locale: "Locale",
-          timezone: "Timezone",
-          timezoneOffset: "Timezone Offset (min)",
-          screenWidth: "Screen Width",
-          screenHeight: "Screen Height",
-          availWidth: "Avail Width",
-          availHeight: "Avail Height",
-          colorDepth: "Color Depth",
-          pixelDepth: "Pixel Depth",
-          devicePixelRatio: "Device Pixel Ratio",
-          hardwareConcurrency: "Hardware Concurrency",
-          deviceMemory: "Device Memory (GB)",
-          maxTouchPoints: "Max Touch Points",
-          cookieEnabled: "Cookie Enabled",
-          doNotTrack: "Do Not Track",
-          webglVendor: "WebGL Vendor",
-          webglRenderer: "WebGL Renderer",
-          canvasFingerprint: "Canvas Fingerprint (DataURL)",
-          audioFingerprint: "Audio Fingerprint",
+        var labels = {
+          parsedBrowser: "Browser (geparst)", parsedVersion: "Version (geparst)", parsedOS: "OS (geparst)",
+          userAgent: "User-Agent", platform: "Platform", vendor: "Vendor", product: "Product",
+          productSub: "Product Sub", appVersion: "App Version", language: "Language", languages: "Languages",
+          locale: "Locale", timezone: "Timezone", timezoneOffset: "Timezone Offset (min)",
+          screenWidth: "Screen Width", screenHeight: "Screen Height", availWidth: "Avail Width",
+          availHeight: "Avail Height", colorDepth: "Color Depth", pixelDepth: "Pixel Depth",
+          devicePixelRatio: "Device Pixel Ratio", hardwareConcurrency: "Hardware Concurrency",
+          deviceMemory: "Device Memory (GB)", maxTouchPoints: "Max Touch Points",
+          cookieEnabled: "Cookie Enabled", doNotTrack: "Do Not Track",
+          webglVendor: "WebGL Vendor", webglRenderer: "WebGL Renderer",
+          canvasFingerprint: "Canvas Fingerprint (DataURL)", audioFingerprint: "Audio Fingerprint",
         };
-
-        const tbody = document.getElementById("signalsBody");
-        tbody.innerHTML = order
-          .filter((k) => k in signals)
-          .map((k) => {
-            let val = signals[k];
-            if (typeof val === "string" && val.length > 120) {
-              val = val.slice(0, 100) + "… [" + val.length + " Zeichen]";
-            }
-            return `<tr><td>${labels[k] || k}</td><td>${escapeHtml(String(val))}</td></tr>`;
-          })
-          .join("");
+        document.getElementById("signalsBody").innerHTML = order.filter(function (k) {
+          return k in signals;
+        }).map(function (k) {
+          var val = signals[k];
+          if (typeof val === "string" && val.length > 120) {
+            val = val.slice(0, 100) + "… [" + val.length + " Zeichen]";
+          }
+          return "<tr><td>" + (labels[k] || k) + "</td><td>" + escapeHtml(String(val)) + "</td></tr>";
+        }).join("");
       }
 
-      function escapeHtml(str) {
-        return str
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;");
+      function renderComponents(components) {
+        document.getElementById("compCanvas").textContent = components.canvas || "–";
+        document.getElementById("compWebgl").textContent = components.webgl || "–";
+        document.getElementById("compAudio").textContent = components.audio || "–";
+        document.getElementById("compScreen").textContent = components.screen || "–";
+        document.getElementById("compNavigator").textContent = components.navigator || "–";
       }
 
-      let lastResult = null;
+      function barClass(pct) {
+        if (pct >= 80) return "match-high";
+        if (pct >= 40) return "match-mid";
+        return "match-low";
+      }
+
+      function renderDbResults(ranked) {
+        var box = document.getElementById("dbResults");
+        if (!ranked || !ranked.length) {
+          box.innerHTML = '<p class="hint">Keine Einträge in der HashDB gefunden.</p>';
+          return;
+        }
+        var html = ranked.map(function (e, idx) {
+          var chips = Object.keys(e.details || {}).map(function (k) {
+            return '<span class="db-chip ' + (e.details[k] ? "ok" : "no") + '">' +
+              k + (e.details[k] ? " ✓" : " ✗") + "</span>";
+          }).join("");
+          var meta = e.meta || {};
+          return (
+            '<div class="db-entry">' +
+              '<div class="db-entry-header">' +
+                '<span class="db-entry-id">#' + (idx + 1) + " · " + escapeHtml(e.id) + "</span>" +
+                '<span class="db-percent" style="color:' +
+                  (e.percent >= 80 ? "var(--success)" : e.percent >= 40 ? "var(--warning)" : "var(--danger)") +
+                '">' + e.percent + "%</span>" +
+              "</div>" +
+              '<div class="match-bar-wrap"><div class="match-bar ' + barClass(e.percent) +
+                '" style="width:' + e.percent + '%"></div></div>' +
+              '<div class="db-meta" style="margin-top:0.4rem">' +
+                escapeHtml(meta.browser || "?") + " · " + escapeHtml(meta.os || "?") +
+                (meta.comment ? " · " + escapeHtml(meta.comment) : "") +
+              "</div>" +
+              '<div class="db-details">' + chips + "</div>" +
+            "</div>"
+          );
+        }).join("");
+        box.innerHTML = html;
+      }
 
       async function run() {
-        const status = document.getElementById("status");
-        const statusText = document.getElementById("statusText");
-        const hashOut = document.getElementById("hashOutput");
-        const btnCopy = document.getElementById("btnCopyHash");
+        var status = document.getElementById("status");
+        var statusText = document.getElementById("statusText");
+        var hashOut = document.getElementById("hashOutput");
+        var btnCopy = document.getElementById("btnCopyHash");
+        var btnGen = document.getElementById("btnGenPr");
 
         status.className = "status loading";
         statusText.textContent = "Sammle Browser-Signale…";
         hashOut.innerHTML = '<span class="placeholder">Berechne…</span>';
         btnCopy.disabled = true;
+        btnGen.disabled = true;
 
         try {
-          const result = await collectAll();
+          if (!window.DanlTechBrowserHasher) {
+            throw new Error("browserhasher.js konnte nicht geladen werden");
+          }
+          var result = await DanlTechBrowserHasher.getHash();
           lastResult = result;
 
           hashOut.textContent = result.hash;
           btnCopy.disabled = false;
+          btnGen.disabled = false;
 
+          renderComponents(result.components);
           renderOverview(result.signals);
           renderSignals(result.signals);
 
           status.className = "status ready";
           statusText.textContent = "Fertig – Hash ist stabil für diesen Browser + dieses Gerät";
         } catch (err) {
-          hashOut.innerHTML = '<span class="placeholder" style="color:var(--danger)">Fehler: ' + escapeHtml(err.message) + "</span>";
+          console.error(err);
+          hashOut.innerHTML = '<span class="placeholder" style="color:var(--danger)">Fehler: ' +
+            escapeHtml(err.message || String(err)) + "</span>";
           status.className = "status";
           statusText.textContent = "Fehler bei der Berechnung";
         }
       }
 
-      document.getElementById("btnCopyHash").addEventListener("click", async () => {
+      document.getElementById("btnCopyHash").addEventListener("click", async function () {
         if (!lastResult) return;
         try {
           await navigator.clipboard.writeText(lastResult.hash);
-          const btn = document.getElementById("btnCopyHash");
-          const old = btn.textContent;
+          var btn = document.getElementById("btnCopyHash");
+          var old = btn.textContent;
           btn.textContent = "✅ Kopiert!";
           btn.classList.add("btn-success");
-          setTimeout(() => {
+          setTimeout(function () {
             btn.textContent = old;
             btn.classList.remove("btn-success");
           }, 1800);
-        } catch {
+        } catch (e) {
           prompt("Hash kopieren:", lastResult.hash);
         }
       });
 
-      document.getElementById("btnCopyAll").addEventListener("click", async () => {
+      document.getElementById("btnCopyAll").addEventListener("click", async function () {
         if (!lastResult) return;
-        const json = JSON.stringify(
-          { hash: lastResult.hash, signals: lastResult.signals, generatedAt: new Date().toISOString() },
-          null,
-          2
-        );
+        var json = JSON.stringify({
+          hash: lastResult.hash,
+          components: lastResult.components,
+          signals: lastResult.signals,
+          generatedAt: new Date().toISOString(),
+        }, null, 2);
         try {
           await navigator.clipboard.writeText(json);
           alert("JSON in Zwischenablage kopiert.");
-        } catch {
+        } catch (e) {
           prompt("JSON kopieren:", json);
         }
       });
 
       document.getElementById("btnRecalc").addEventListener("click", run);
 
+      document.getElementById("btnCompareDb").addEventListener("click", async function () {
+        if (!lastResult) {
+          alert("Bitte warte, bis der Hash berechnet wurde.");
+          return;
+        }
+        var box = document.getElementById("dbResults");
+        box.innerHTML = '<p class="hint">Lade HashDB…</p>';
+        var urls = [
+          "https://danltech.github.io/hashdb1/index.json",
+          "https://raw.githubusercontent.com/danltech/hashdb1/main/index.json",
+          "hashdb/index.json"
+        ];
+        var lastErr = null;
+        for (var i = 0; i < urls.length; i++) {
+          try {
+            var res = await fetch(urls[i], { cache: "no-store" });
+            if (!res.ok) throw new Error(urls[i] + " → HTTP " + res.status);
+            var db = await res.json();
+            var ranked = DanlTechBrowserHasher.compareWithDb(lastResult.components, db.entries || []);
+            renderDbResults(ranked);
+            box.insertAdjacentHTML("afterbegin",
+              '<p class="hint" style="margin-bottom:0.75rem">Quelle: <code>' + escapeHtml(urls[i]) +
+              '</code> · ' + (db.count != null ? db.count : (db.entries || []).length) + ' Einträge' +
+              (db.updated ? ' · Stand ' + escapeHtml(db.updated) : '') + '</p>');
+            return;
+          } catch (err) {
+            lastErr = err;
+            console.warn("HashDB Versuch fehlgeschlagen:", urls[i], err);
+          }
+        }
+        box.innerHTML = '<p class="hint" style="color:var(--danger)">HashDB konnte nicht geladen werden.<br>' +
+          escapeHtml(lastErr && lastErr.message ? lastErr.message : "unbekannt") +
+          '<br><br>Erwartete URL: <code>https://danltech.github.io/hashdb1/index.json</code><br>' +
+          'Repo: <a href="https://github.com/danltech/hashdb1" target="_blank" rel="noopener">github.com/danltech/hashdb1</a></p>';
+      });
+
+      document.getElementById("btnGenPr").addEventListener("click", function () {
+        if (!lastResult) return;
+        var comment = document.getElementById("prComment").value.trim();
+        var entry = DanlTechBrowserHasher.buildHashDbEntry(lastResult, comment);
+        lastPrJson = JSON.stringify(entry, null, 2);
+        document.getElementById("prOutput").style.display = "block";
+        document.getElementById("prOutput").textContent = lastPrJson;
+        document.getElementById("prHint").style.display = "block";
+        document.getElementById("prFilename").textContent = "entries/" + entry.id + ".json";
+        document.getElementById("btnCopyPr").disabled = false;
+      });
+
+      document.getElementById("btnCopyPr").addEventListener("click", async function () {
+        if (!lastPrJson) return;
+        try {
+          await navigator.clipboard.writeText(lastPrJson);
+          var btn = document.getElementById("btnCopyPr");
+          var old = btn.textContent;
+          btn.textContent = "✅ Kopiert!";
+          setTimeout(function () { btn.textContent = old; }, 1800);
+        } catch (e) {
+          prompt("JSON kopieren:", lastPrJson);
+        }
+      });
+
       // Start
-      run();
+      if (window.DanlTechBrowserHasher) {
+        run();
+      } else {
+        // Retry shortly in case script is still loading
+        setTimeout(function () {
+          if (window.DanlTechBrowserHasher) run();
+          else {
+            document.getElementById("hashOutput").innerHTML =
+              '<span class="placeholder" style="color:var(--danger)">browserhasher.js konnte nicht geladen werden. Bitte über HTTP/HTTPS oder lokalen Server öffnen (nicht als file://).</span>';
+            document.getElementById("status").className = "status";
+            document.getElementById("statusText").textContent = "Script fehlt";
+          }
+        }, 200);
+      }
     })();
   </script>
+  </div>
 </body>
 </html>
